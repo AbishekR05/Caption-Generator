@@ -1,0 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil&display=swap');
+
+@import "tailwindcss";
+
+body {
+  background-color: #0f172a; /* slate-900 */
+  color: white;
+}

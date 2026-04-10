@@ -1,0 +1,28 @@
+# ML / AI
+faster-whisper>=1.0.0        # Replaces openai-whisper — 2x-4x faster, same accuracy
+transformers>=4.35.0          # Helsinki-NLP MarianMT translation — unchanged
+sentencepiece>=0.1.99
+sacremoses>=0.0.53
+
+# Audio
+sounddevice>=0.4.6
+numpy>=1.24.0
+ffmpeg-python>=0.2.0
+
+# TTS (for test audio generation only)
+gTTS>=2.3.2
+
+# Web server (Week 2 additions)
+flask>=3.0.0
+flask-socketio>=5.3.6
+flask-cors>=4.0.0
+requests>=2.31.0
+python-socketio
+
+# Week 4 Missing dependencies
+sounddevice
+scipy
+numpy>=5.10.0
+
+# NOTE: PyTorch must be installed separately with CUDA:
+# pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
