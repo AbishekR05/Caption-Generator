@@ -106,6 +106,7 @@ function App() {
         alert(`Saved: ${res.data.filename} (${res.data.caption_count} captions)`)
       }
     } catch (err) {
+      console.error(err)
       alert('Export failed. Is the backend running?')
     }
   }

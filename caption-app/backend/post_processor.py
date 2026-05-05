@@ -4,6 +4,7 @@
 # Must not be called if both features are disabled — check flags before calling.
 
 import time
+import re
 import nltk
 from better_profanity import profanity
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
@@ -38,8 +39,8 @@ NEGATIVE_THRESHOLD = -0.05
 
 def censor(text: str) -> str:
     """
-    Replace profane words with censored versions.
-    e.g. "fuck" → "f**k", "shit" → "s**t"
+    Replace profane words with censored versions leaving the first and last letters intact.
+    e.g. "fuck" → "f**k", "bitch" → "b***h"
 
     Args:
         text (str): Raw transcript text
@@ -47,7 +48,16 @@ def censor(text: str) -> str:
     Returns:
         str: Censored text
     """
-    return profanity.censor(text, censor_char='*')
+    def _replace(match):
+        word = match.group(0)
+        # Check if this specific word is profane
+        if profanity.contains_profanity(word.lower()):
+            if len(word) > 2:
+                return word[0] + '*' * (len(word) - 2) + word[-1]
+            return '*' * len(word)
+        return word
+        
+    return re.sub(r'\b[a-zA-Z]+\b', _replace, text)
 
 
 def analyze_sentiment(text: str) -> dict:
