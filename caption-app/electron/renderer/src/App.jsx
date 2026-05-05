@@ -20,6 +20,9 @@ function App() {
   const [inputMode, setInputMode] = useState('mic')
   const [translateEnabled, setTranslateEnabled] = useState(false)
   const [captionHistory, setCaptionHistory] = useState([])
+  const [censorEnabled, setCensorEnabled] = useState(false)
+  const [sentimentEnabled, setSentimentEnabled] = useState(false)
+  const [sentiment, setSentiment] = useState(null)
 
   // Socket setup
   useEffect(() => {
@@ -33,6 +36,7 @@ function App() {
     newSocket.on('caption_update', (data) => {
       setTranscript(data.transcript)
       setTranslated(data.translated || '')
+      setSentiment(data.sentiment || null)
 
       // Append to history with timing
       setCaptionHistory(prev => {
@@ -50,7 +54,8 @@ function App() {
       if (window.electronAPI) {
         window.electronAPI.sendCaption({
           transcript: data.transcript,
-          translated: data.translated || ''
+          translated: data.translated || '',
+          sentiment: data.sentiment || null
         })
       }
     })
@@ -65,11 +70,14 @@ function App() {
     formData.append('file', file)
     formData.append('direction', direction)
     formData.append('translate', translateEnabled.toString())
+    formData.append('censor', censorEnabled.toString())
+    formData.append('sentiment', sentimentEnabled.toString())
 
     try {
       const res = await axios.post('http://localhost:5000/transcribe-and-translate', formData)
       setTranscript(res.data.transcript)
       setTranslated(res.data.translated || '')
+      setSentiment(res.data.sentiment || null)
       
       // Add offline payload to history
       setCaptionHistory(prev => [...prev, {
@@ -112,7 +120,9 @@ function App() {
       socket.emit('start_mic', {
         mode: inputMode,
         direction,
-        translate: translateEnabled
+        translate: translateEnabled,
+        censor: censorEnabled,
+        sentiment: sentimentEnabled
       })
       setMicActive(true)
     } else if (socket) {
@@ -144,6 +154,10 @@ function App() {
             onInputModeChange={setInputMode}
             translateEnabled={translateEnabled}
             onTranslateToggle={setTranslateEnabled}
+            censorEnabled={censorEnabled}
+            onCensorToggle={() => setCensorEnabled(prev => !prev)}
+            sentimentEnabled={sentimentEnabled}
+            onSentimentToggle={() => setSentimentEnabled(prev => !prev)}
             captionHistory={captionHistory}
             onExport={handleExport}
             onClearHistory={handleClearHistory}
@@ -165,6 +179,7 @@ function App() {
             isLoading={isLoading}
             translateEnabled={translateEnabled}
             micActive={micActive}
+            sentiment={sentiment}
           />
         </div>
       </main>

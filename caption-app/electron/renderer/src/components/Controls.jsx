@@ -8,6 +8,8 @@ function Controls({
   micActive, onMicToggle,
   inputMode, onInputModeChange,
   translateEnabled, onTranslateToggle,
+  censorEnabled, onCensorToggle,
+  sentimentEnabled, onSentimentToggle,
   captionHistory = [], onExport, onClearHistory,
   isConnected
 }) {
@@ -96,6 +98,38 @@ function Controls({
             </button>
         </div>
         <span className="text-xs text-gray-500 italic block">Changes apply to next audio chunk</span>
+      </div>
+
+      {/* Profanity Censor Toggle */}
+      <div className="flex items-center justify-between gap-4">
+          <span className="text-sm text-gray-300">🤬 Censor profanity</span>
+          <button
+              onClick={onCensorToggle}
+              className={`w-12 h-6 rounded-full transition-colors relative ${
+                  censorEnabled ? 'bg-indigo-500' : 'bg-gray-600'
+              }`}
+              title="Replace profane words with asterisks"
+          >
+              <div className={`w-4 h-4 rounded-full bg-white absolute top-1 transition-transform ${
+                  censorEnabled ? 'translate-x-7' : 'translate-x-1'
+              }`}/>
+          </button>
+      </div>
+
+      {/* Sentiment Analysis Toggle */}
+      <div className="flex items-center justify-between gap-4">
+          <span className="text-sm text-gray-300">💬 Sentiment colors</span>
+          <button
+              onClick={onSentimentToggle}
+              className={`w-12 h-6 rounded-full transition-colors relative ${
+                  sentimentEnabled ? 'bg-indigo-500' : 'bg-gray-600'
+              }`}
+              title="Color captions: green=positive, red=negative, white=neutral"
+          >
+              <div className={`w-4 h-4 rounded-full bg-white absolute top-1 transition-transform ${
+                  sentimentEnabled ? 'translate-x-7' : 'translate-x-1'
+              }`}/>
+          </button>
       </div>
 
       {/* 4. Translation Direction */}
@@ -188,6 +222,10 @@ Controls.propTypes = {
   onInputModeChange: PropTypes.func,
   translateEnabled: PropTypes.bool,
   onTranslateToggle: PropTypes.func,
+  censorEnabled: PropTypes.bool,
+  onCensorToggle: PropTypes.func,
+  sentimentEnabled: PropTypes.bool,
+  onSentimentToggle: PropTypes.func,
   captionHistory: PropTypes.array,
   onExport: PropTypes.func,
   onClearHistory: PropTypes.func,

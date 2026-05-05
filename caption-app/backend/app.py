@@ -8,6 +8,7 @@ import torch
 
 from transcriber import transcribe
 from translator import translate
+from post_processor import process as post_process
 
 # ── App Init ─────────────────────────────────────────────
 app = Flask(__name__)
@@ -122,6 +123,8 @@ def handle_transcribe_and_translate():
         return jsonify({"success": False, "error": "No audio file provided."}), 400
         
     translate_enabled = request.form.get('translate', 'false').lower() == 'true'
+    censor_enabled = request.form.get('censor', 'false').lower() == 'true'
+    sentiment_enabled = request.form.get('sentiment', 'false').lower() == 'true'
     direction = request.form.get('direction', 'en-ta')
     if translate_enabled and direction not in ['en-ta', 'ta-en']:
         return jsonify({"success": False, "error": "Invalid direction. Must be 'en-ta' or 'ta-en'."}), 400
@@ -145,11 +148,14 @@ def handle_transcribe_and_translate():
         transcript = transcribe_result['text'].strip()
         detected_language = transcribe_result['language']
         
+        # Post-process
+        post = post_process(transcript, censor_enabled, sentiment_enabled)
+        
         # 2. Translate only if enabled
         translated = None
-        if translate_enabled and transcript:
+        if translate_enabled and post['text']:
             tr_start = time.time()
-            translated = translate(transcript, direction=direction)
+            translated = translate(post['text'], direction=direction)
             tr_duration = time.time() - tr_start
         else:
             tr_duration = 0
@@ -158,8 +164,9 @@ def handle_transcribe_and_translate():
         
         return jsonify({
             "success": True,
-            "transcript": transcript,
+            "transcript": post['text'],
             "translated": translated,
+            "sentiment": post['sentiment'],
             "language_detected": detected_language,
             "direction": direction if translate_enabled else None,
             "transcription_time": round(t_duration, 1),
@@ -246,6 +253,8 @@ def handle_start_mic(data):
     mode = data.get('mode', 'mic')           # 'mic' or 'system'
     direction = data.get('direction', 'en-ta')
     translate_enabled = data.get('translate', False)  # OFF by default
+    censor_enabled = data.get('censor', False)
+    sentiment_enabled = data.get('sentiment', False)
 
     print(f'[SocketIO] start_mic | mode: {mode} | translate: {translate_enabled}')
 
@@ -257,11 +266,21 @@ def handle_start_mic(data):
             if not transcript:
                 return
 
+            post = post_process(
+                transcript,
+                censor_enabled=censor_enabled,
+                sentiment_enabled=sentiment_enabled
+            )
+
             translated = None
             if translate_enabled:
-                translated = translate(transcript, direction)
+                translated = translate(post['text'], direction)
 
-            emit_caption(transcript, translated)
+            emit_caption(
+                text=post['text'],
+                translated=translated,
+                sentiment=post['sentiment']
+            )
 
         except Exception as e:
             print(f'[Error] Chunk processing failed: {e}')
@@ -283,13 +302,15 @@ def handle_stop_mic():
 
 # ── Week 4 Emitters ──────────────────────────────────────
 
-def emit_caption(transcript, translated=None):
+def emit_caption(text, translated=None, sentiment=None):
     socketio.emit('caption_update', {
-        'transcript': transcript,
+        'transcript': text,
         'translated': translated,   # None if translation is off
+        'sentiment': sentiment,
         'timestamp': time.time()
     })
-    print(f'[SocketIO] caption_update: {transcript[:40]}')
+    label = sentiment['label'] if sentiment else 'off'
+    print(f'[SocketIO] caption_update | sentiment:{label} | {text[:40]}')
 
 # ── Entry Point ───────────────────────────────────────────
 

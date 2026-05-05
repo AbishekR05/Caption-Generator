@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import PropTypes from 'prop-types'
 
-function CaptionPanel({ transcript, translated, direction, isLoading, translateEnabled, micActive }) {
+function CaptionPanel({ transcript, translated, direction, isLoading, translateEnabled, micActive, sentiment }) {
   const [elapsed, setElapsed] = useState(0)
 
   // Track session timer dynamically
@@ -25,6 +25,8 @@ function CaptionPanel({ transcript, translated, direction, isLoading, translateE
   const isTranscriptEmpty = !transcript && !isLoading
   const isTranslationEmpty = !translated && !isLoading
 
+  const transcriptColor = sentiment?.color || '#ffffff'
+
   return (
     <div className="flex-1 flex flex-col gap-4 min-h-[500px]">
       
@@ -42,9 +44,17 @@ function CaptionPanel({ transcript, translated, direction, isLoading, translateE
         <div className="bg-gray-800 rounded-xl overflow-hidden shadow-lg flex flex-col border border-gray-700">
           <div className="bg-gray-900 px-4 py-3 border-b border-gray-700 flex justify-between items-center">
             <span className="text-gray-300 font-semibold text-sm tracking-wide uppercase">Original Stream</span>
-            <span className="bg-indigo-500/20 text-indigo-400 px-2 py-1 rounded text-xs font-bold">
-              English
-            </span>
+            <div className="flex gap-2 items-center">
+              {sentiment && (
+                <span className="text-xs px-2 py-0.5 rounded-full font-bold"
+                  style={{ backgroundColor: sentiment.color + '22', color: sentiment.color }}>
+                  {sentiment.label}
+                </span>
+              )}
+              <span className="bg-indigo-500/20 text-indigo-400 px-2 py-1 rounded text-xs font-bold">
+                English
+              </span>
+            </div>
           </div>
           <div className="p-6 overflow-y-auto flex-1 bg-gradient-to-br from-gray-800 to-gray-850">
             {isLoading ? (
@@ -62,7 +72,10 @@ function CaptionPanel({ transcript, translated, direction, isLoading, translateE
               </div>
             ) : (
               <div key={transcript} className="animate-fade-in-up">
-                <p className="text-xl leading-relaxed text-gray-100 font-medium">
+                <p 
+                  className="text-xl leading-relaxed font-medium transition-colors duration-300"
+                  style={{ color: transcriptColor }}
+                >
                   {transcript}
                 </p>
               </div>
@@ -115,7 +128,8 @@ CaptionPanel.propTypes = {
   direction: PropTypes.string,
   isLoading: PropTypes.bool,
   translateEnabled: PropTypes.bool,
-  micActive: PropTypes.bool
+  micActive: PropTypes.bool,
+  sentiment: PropTypes.object
 }
 
 export default CaptionPanel

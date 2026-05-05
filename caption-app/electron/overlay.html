@@ -114,6 +114,16 @@
     window.electronAPI.onCaption((data) => {
       placeholderEl.style.display = 'none'
 
+      // Apply sentiment color to English transcript
+      const color = data.sentiment?.color || currentSettings.textColor
+      transcriptEl.style.color = color
+      transcriptEl.style.textShadow = `
+          -1px -1px 0 #000,
+           1px -1px 0 #000,
+          -1px  1px 0 #000,
+           1px  1px 0 #000,
+           0px  2px 4px rgba(0,0,0,0.8)
+      `
       transcriptEl.textContent = data.transcript || ''
       
       if (data.translated) {
